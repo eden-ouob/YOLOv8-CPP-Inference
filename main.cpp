@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <getopt.h>
-
+#include <dirent.h>
 #include <opencv2/opencv.hpp>
 
 #include "inference.h"
@@ -30,8 +30,22 @@ int main(int argc, char **argv)
     Inference inf(projectBasePath + "/best_LPR.onnx", cv::Size(640, 640), "/classes.txt", runOnGPU);
 
     std::vector<std::string> imageNames;
-    imageNames.push_back(projectBasePath + "/data/1.jpg");
-    imageNames.push_back(projectBasePath + "/data/2.jpg");
+    std::string imageFolder = projectBasePath + "/data";
+
+    DIR* dir;
+    struct dirent* ent;
+    
+    if ((dir = opendir(imageFolder.c_str())) != NULL) {
+        while ((ent = readdir(dir)) != NULL) {
+            std::string fileName = ent->d_name;
+            if (fileName.size() > 4 && 
+                (fileName.substr(fileName.size() - 4) == ".jpg" || 
+                 fileName.substr(fileName.size() - 4) == ".JPG")) {
+                imageNames.push_back(imageFolder + "/" + fileName);
+            }
+        }
+        closedir(dir);
+    }
 
     for (int i = 0; i < imageNames.size(); ++i)
     {
